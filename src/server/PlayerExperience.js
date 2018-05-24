@@ -19,6 +19,7 @@ export default class PlayerExperience extends Experience {
   start() {
     this.sharedParams.addParamListener('/position', value => {
       this.position = value;
+      this.broadcast('player', null, 'position', this.position);
     });
 
     this.sharedParams.addParamListener('/start-stop', value => {

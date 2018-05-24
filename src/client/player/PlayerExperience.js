@@ -53,6 +53,10 @@ class PlayerExperience extends soundworks.Experience {
 
     this.clock = new ClockEngine(this.view, this.syncScheduler);
 
+    this.receive('position', pos => {
+      this.position = pos;
+    });
+
     this.receive('start', syncStartTime => {
       if (!this.clock.master) {
         this.clock.startTime = syncStartTime;
@@ -65,7 +69,8 @@ class PlayerExperience extends soundworks.Experience {
         this.clock.startTime = null;
         this.syncScheduler.remove(this.clock);
 
-        this.view.setTime(0);
+        // we could reset the display to the start position, but the last deferred updates overwrite it anyway, and we can stay at the last time
+        // this.view.setTime(this.position);
       }
     });
 
