@@ -16,7 +16,13 @@ export const template = `
 `;
 
 function format_time(t)
-{    // [-][hh:]mm:ss
+{   // [-][hh:]mm:ss
+    //options:
+    let hours_two_digits = false;   // always pad hour to two digits by prepending "0"
+    let hours_always = false;       // todo
+    let colon_flash  = false;       // todo: flash separating ':' every 0.5 s
+    let colon_symbol = ':';         // todo
+
     let sign = '';
     if (t < 0)
     {
@@ -30,12 +36,15 @@ function format_time(t)
     let minutes = Math.floor((sec_num - (hours * 3600)) / 60);
     let seconds = sec_num - (hours * 3600) - (minutes * 60);
     
-    if (hours   < 10) {hours   = "0"+hours;}
+    let hourstring = hours;
+    if (hours < 10  &&  hours_two_digits) 
+    {
+        let hourstring  = "0" + hours;
+    }
     if (minutes < 10) {minutes = "0"+minutes;}
     if (seconds < 10) {seconds = "0"+seconds;}
     
-    return sign + (hours != '00' ? hours + ':' : '') + minutes +':'+ seconds;
-    // todo: flash separating ':' every 0.5 s
+    return sign + (hours != 0 ? hourstring + ':' : '') + minutes +':'+ seconds;
 }
     
 export class ClockView extends soundworks.SegmentedView {
