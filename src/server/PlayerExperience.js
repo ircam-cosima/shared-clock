@@ -6,26 +6,42 @@ export default class PlayerExperience extends Experience {
     super(clientType);
 
     this.checkin = this.require('checkin');
-    this.sharedConfig = this.require('shared-config');
-    this.audioBufferManager = this.require('audio-buffer-manager');
+    this.sharedParams = this.require('shared-params');
+
+    this.syncScheduler = this.require('sync-scheduler');
+    this.sync = this.require('sync-scheduler');
+
+    this.startTime = null;
+    this.position = 0;
+    this.state = 'stop';
   }
 
-  // if anything needs to append when the experience starts
   start() {
+    this.sharedParams.addParamListener('/position', value => {
+      this.position = value;
+    });
 
+    this.sharedParams.addParamListener('/start-stop', value => {
+      if (value === 'start') {
+        this.startTime = this.sync.syncTime - this.position;
+        this.broadcast('player', null, 'start', this.startTime);
+      } else if (value === 'stop') {
+        this.startTime = null;
+        this.broadcast('player', null, 'stop');
+      }
+
+      this.state = value;
+    });
   }
 
-  // if anything needs to happen when a client enters the performance (*i.e.*
-  // starts the experience on the client side), write it in the `enter` method
   enter(client) {
     super.enter(client);
-    // send a 'hello' message to all the other clients of the same type
-    this.broadcast(client.type, client, 'hello');
+
+    if (this.state === 'start')
+      this.send(client, 'start', this.startTime);
   }
 
   exit(client) {
     super.exit(client);
-    // send a 'goodbye' message to all the other clients of the same type
-    this.broadcast(client.type, client, 'goodbye');
   }
 }
