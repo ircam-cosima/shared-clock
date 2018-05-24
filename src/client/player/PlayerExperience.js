@@ -1,40 +1,9 @@
 import * as soundworks from 'soundworks/client';
 import { centToLinear } from 'soundworks/utils/math';
+import { ClockView, template } from './ClockView';
 
 const audio = soundworks.audio;
 const audioContext = soundworks.audioContext;
-
-const template = `
-  <canvas class="background"></canvas>
-  <div class="foreground">
-    <div class="section-top flex-middle">
-      <p class="" id="state"><%= state %></p>
-    </div>
-    <div class="section-center flex-center">
-      <p class="big" id="time"><%= currentTime %></p>
-    </div>
-    <div class="section-bottom flex-middle">
-      <%= position %>
-    </div>
-  </div>
-`;
-
-class ClockView extends soundworks.SegmentedView {
-  constructor(...args) {
-    super(...args);
-  }
-
-  onRender(...args) {
-    super.onRender(...args);
-
-    this.$time = this.$el.querySelector('#time');
-  }
-
-  setTime(time) {
-    // format time
-    this.$time.textContent = time;
-  }
-}
 
 class ClockEngine extends audio.TimeEngine {
   constructor(view, syncScheduler) {
@@ -75,7 +44,7 @@ class PlayerExperience extends soundworks.Experience {
 
     // initialize the view
     this.view = new ClockView(template, {
-      currentTime: '0',
+      currentTime: '00:00',
       state: '',
       position: '',
     }, {}, {
