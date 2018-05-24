@@ -26,12 +26,11 @@ function format_time(t)
     let sign = '';
     if (t < 0)
     {
-        t = -t;
         sign = '-';
     }
 
-    let sec_num = Math.floor(t);
-    let sec_frac = t - sec_num;	// fractional seconds
+    let sec_num = Math.abs(Math.floor(t));
+    let sec_frac = Math.abs(t) - sec_num;	// fractional seconds
     let hours   = Math.floor(sec_num / 3600);
     let minutes = Math.floor((sec_num - (hours * 3600)) / 60);
     let seconds = sec_num - (hours * 3600) - (minutes * 60);
@@ -61,6 +60,7 @@ export class ClockView extends soundworks.SegmentedView {
   setTime(time) {
     // format time
     this.$time.textContent = format_time(time);
+    //console.log(time, format_time(time));
   }
 }
 
