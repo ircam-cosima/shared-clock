@@ -1,27 +1,34 @@
 import * as soundworks from 'soundworks/client';
+import ClockView from './ClockView';
 import { centToLinear } from 'soundworks/utils/math';
-import { ClockView, template } from './ClockView';
 
 const audio = soundworks.audio;
 const audioContext = soundworks.audioContext;
 
 class ClockEngine extends audio.TimeEngine {
-  constructor(view, syncScheduler) {
+  constructor(view, sync) {
     super();
 
     this.view = view;
-    this.syncScheduler = syncScheduler;
+    this.sync = sync;
     this.startTime = null;
 
     this.period = 0.05;
+    this._timeoutId = null;
+  }
+
+  clear() {
+    clearTimeout(this._timeoutId);
   }
 
   advanceTime(syncTime) {
-    const delta = syncTime - this.startTime;
+    const now = this.sync.getSyncTime();
+    const currentTime = syncTime - this.startTime;
 
-    this.syncScheduler.defer(() => {
-      this.view.setTime(delta);
-    }, syncTime);
+    // compensate scheduler lookahead
+    this._timeoutId = setTimeout(() => {
+      this.view.setTime(currentTime);
+    }, syncTime - now);
 
     return syncTime + this.period;
   }
@@ -45,7 +52,7 @@ class PlayerExperience extends soundworks.Experience {
     super.start(); // don't forget this
 
     // initialize the view
-    this.view = new ClockView(template, {
+    this.view = new ClockView({
       currentTime: '00:00',
       state: '',
       position: '',
@@ -53,10 +60,13 @@ class PlayerExperience extends soundworks.Experience {
       id: this.id,
     });
 
-    this.clock = new ClockEngine(this.view, this.syncScheduler);
+    this.clock = new ClockEngine(this.view, this.sync);
 
-    this.receive('position', pos => {
-      this.position = pos;
+    this.receive('position', position => {
+      this.position = position;
+      // if the clock is not running update
+      if (!this.clock.master)
+        this.view.setTime(this.position);
     });
 
     this.receive('start', syncStartTime => {
@@ -72,15 +82,16 @@ class PlayerExperience extends soundworks.Experience {
       if (this.clock.master) {
         this.clock.startTime = null;
         this.syncScheduler.remove(this.clock);
+        this.clock.clear();
 
-        // we could reset the display to the start position, but the last deferred updates overwrite it anyway, and we can stay at the last time
-        // this.view.setTime(this.position);
+        // we could reset the display to the start position, but the last
+        // deferred updates overwrite it anyway, and we can stay at the last time
+        this.view.setTime(this.position);
       }
     });
 
-    // as show can be async, we make sure that the view is actually rendered
     this.show().then(() => {
-
+      // view is ready
     });
   }
 

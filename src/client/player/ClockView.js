@@ -1,6 +1,6 @@
 import * as soundworks from 'soundworks/client';
 
-export const template = `
+const template = `
   <canvas class="background"></canvas>
   <div class="foreground">
     <div class="section-top flex-middle">
@@ -15,40 +15,35 @@ export const template = `
   </div>
 `;
 
-function format_time(t)
-{   // [-][hh:]mm:ss
-    //options:
-    let hours_two_digits = false;   // always pad hour to two digits by prepending "0"
-    let hours_always = false;       // todo
-    let colon_flash  = false;       // todo: flash separating ':' every 0.5 s
-    let colon_symbol = ':';         // todo
+function padLeft(value, char, length) {
+  value = value + ''; // cast to string
 
-    let sign = '';
-    if (t < 0)
-    {
-        sign = '-';
-    }
+  while (value.length < length)
+    value = char + value;
 
-    let sec_num = Math.abs(Math.floor(t));
-    let sec_frac = Math.abs(t) - sec_num;	// fractional seconds
-    let hours   = Math.floor(sec_num / 3600);
-    let minutes = Math.floor((sec_num - (hours * 3600)) / 60);
-    let seconds = sec_num - (hours * 3600) - (minutes * 60);
-    
-    let hourstring = hours;
-    if (hours < 10  &&  hours_two_digits) 
-    {
-        let hourstring  = "0" + hours;
-    }
-    if (minutes < 10) {minutes = "0"+minutes;}
-    if (seconds < 10) {seconds = "0"+seconds;}
-    
-    return sign + (hours != 0 ? hourstring + ':' : '') + minutes +':'+ seconds;
+  return value;
 }
-    
-export class ClockView extends soundworks.SegmentedView {
-  constructor(...args) {
-    super(...args);
+
+function formatTime(time) {   // [-][hh:]mm:ss
+    // possible options (really needed ? if not remove that):
+    // const hoursTwoDigits = false;   // always pad hour to two digits by prepending "0"
+    // const hoursAlways = false;       // todo
+    // const colonFlash  = false;       // todo: flash separating ':' every 0.5 s
+    // const colonSymbol = ':';         // todo
+
+    const sign = time < 0 ? '-' : '';
+    const timeInSeconds = Math.abs(Math.floor(time));
+    // const secFrac = Math.abs(t) - timeInSeconds;	// fractional seconds (not used)
+    const hours = padLeft(Math.floor(timeInSeconds / 3600), '0', 2);
+    const minutes = padLeft(Math.floor((timeInSeconds - (hours * 3600)) / 60), '0', 2);
+    const seconds = padLeft(timeInSeconds - (hours * 3600) - (minutes * 60), '0', 2);
+
+    return sign + (hours !== '00' ? hours + ':' : '') + minutes + ':' + seconds;
+}
+
+class ClockView extends soundworks.SegmentedView {
+  constructor(model, events, options) {
+    super(template, model, events, options);
   }
 
   onRender(...args) {
@@ -58,10 +53,8 @@ export class ClockView extends soundworks.SegmentedView {
   }
 
   setTime(time) {
-    // format time
-    this.$time.textContent = format_time(time);
-    //console.log(time, format_time(time));
+    this.$time.textContent = formatTime(time);
   }
 }
 
-//export default { ClockView, template };
+export default ClockView;

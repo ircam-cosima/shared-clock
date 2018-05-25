@@ -40,6 +40,8 @@ export default class PlayerExperience extends Experience {
 
     if (this.state === 'start')
       this.send(client, 'start', this.startTime);
+    else
+      this.send(client, 'position', this.position);
   }
 
   exit(client) {
