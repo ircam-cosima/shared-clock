@@ -43,6 +43,8 @@ class ClockEngine extends audio.TimeEngine {
     this.view = view;
     this.syncScheduler = syncScheduler;
     this.startTime = null;
+
+    this.period = 0.05;
   }
 
   advanceTime(syncTime) {
@@ -52,7 +54,7 @@ class ClockEngine extends audio.TimeEngine {
       this.view.setTime(delta);
     }, syncTime);
 
-    return syncTime + 0.05;
+    return syncTime + this.period;
   }
 }
 
@@ -86,8 +88,10 @@ class PlayerExperience extends soundworks.Experience {
 
     this.receive('start', syncStartTime => {
       if (!this.clock.master) {
+        const startAt = Math.ceil(this.syncScheduler.syncTime);
+
         this.clock.startTime = syncStartTime;
-        this.syncScheduler.add(this.clock);
+        this.syncScheduler.add(this.clock, startAt);
       }
     });
 
