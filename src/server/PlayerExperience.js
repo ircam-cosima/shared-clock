@@ -9,39 +9,53 @@ class PlayerExperience extends Experience {
     this.sharedParams = this.require('shared-params');
     this.sync = this.require('sync');
 
-    this.startTime = null;
+    this.cueTime = null;
     this.position = 0;
     this.state = 'stop';
-    this.propagationDelay = 0.2; // add 200 ms to startTime
+    this.propagationDelay = 0.2; // add 200 ms to smooth network propagation
   }
 
   start() {
-    // this.sharedParams.addParamListener('/position', value => {
-    //   this.position = value;
-    //   this.broadcast('player', null, 'position', this.position);
-    // });
-
     this.sharedParams.addParamListener('/start-stop', value => {
       const now =  this.sync.getSyncTime();
       const applyAt = now + this.propagationDelay;
 
       switch (value) {
         case 'start':
-          this.startTime = applyAt;
-          this.broadcast('player', null, 'start', this.position, applyAt);
+          if (this.state !== 'start') {
+            this.cueTime = applyAt;
+            this.broadcast('player', null, 'start', this.position, applyAt);
+            this.state = value;
+          }
           break;
         case 'pause':
-          this.position = applyAt - this.startTime;
-          this.broadcast('player', null, 'pause', this.position, applyAt);
+          if (this.state === 'start') {
+            this.position += applyAt - this.cueTime;
+            this.broadcast('player', null, 'pause', this.position, applyAt);
+            this.state = value;
+          }
           break;
         case 'stop':
-          this.startTime = null;
-          this.position = 0;
-          this.broadcast('player', null, 'stop', applyAt);
+          if (this.state !== 'stop') {
+            this.cueTime = null;
+            this.position = 0;
+            this.broadcast('player', null, 'stop', applyAt);
+            this.state = value;
+          }
           break;
       }
+    });
 
-      this.state = value;
+    this.sharedParams.addParamListener('/seek', value => {
+      const now =  this.sync.getSyncTime();
+      const applyAt = now + this.propagationDelay;
+      this.position = value;
+
+      if (this.state === 'start') {
+        this.cueTime = applyAt;
+      }
+
+      this.broadcast('player', null, 'seek', this.position, applyAt);
     });
   }
 
@@ -50,7 +64,7 @@ class PlayerExperience extends Experience {
 
     switch (this.state) {
       case 'start':
-        this.send(client, 'start', this.position, this.startTime);
+        this.send(client, 'start', this.position, this.cueTime);
         break;
       case 'pause':
         const now =  this.sync.getSyncTime();

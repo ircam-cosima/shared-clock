@@ -19,7 +19,7 @@ function bootstrap() {
   const controller = new ControllerExperience(config.assetsDomain);
 
   controller.setGuiOptions('/start-stop', { type: 'buttons' })
-  controller.setGuiOptions('/position', { type: 'slider', size: 'large' });
+  controller.setGuiOptions('/seek', { type: 'slider', size: 'large' });
 
   soundworks.client.start();
 }

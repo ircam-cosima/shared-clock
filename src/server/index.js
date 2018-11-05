@@ -41,7 +41,7 @@ soundworks.server.setClientConfigDefinition((clientType, config, httpRequest) =>
 
 const sharedParams = soundworks.server.require('shared-params');
 sharedParams.addEnum('/start-stop', 'start / stop', ['start', 'pause', 'stop'], 'stop');
-sharedParams.addNumber('/position', 'position', -10, 60 * 60, 1, 0, 's');
+sharedParams.addNumber('/seek', 'seek', -10, 60 * 60, 1, 0, 's');
 
 const experience = new PlayerExperience('player');
 const controller = new ControllerExperience('controller');

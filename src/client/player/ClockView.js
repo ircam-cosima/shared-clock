@@ -16,13 +16,22 @@ function formatTime(time) {   // [-][hh:]mm:ss
     // const colonFlash  = false;       // todo: flash separating ':' every 0.5 s
     // const colonSymbol = ':';         // todo
 
-    const sign = time < 0 ? '-' : '';
-    const timeInSeconds = Math.abs(Math.floor(time));
+    let sign;
+    let timeInSeconds;
+
+    if (time >= 0) {
+      sign = '';
+      timeInSeconds = Math.abs(Math.floor(time));
+    } else {
+      sign = '-';
+      timeInSeconds = Math.abs(Math.ceil(time));
+    }
+
     const secFrac = Math.abs(time) - timeInSeconds;	// fractional seconds (not used)
     const hours = padLeft(Math.floor(timeInSeconds / 3600), '0', 2);
     const minutes = padLeft(Math.floor((timeInSeconds - (hours * 3600)) / 60), '0', 2);
     const seconds = padLeft(timeInSeconds - (hours * 3600) - (minutes * 60), '0', 2);
-    const millis = padLeft(Math.floor(secFrac * 1000), '0', 3);
+    let millis = padLeft(Math.floor(secFrac * 1000), '0', 3);
 
     return sign + (hours !== '00' ? hours + ':' : '') + minutes + ':' + seconds + ':' + millis;
 }
