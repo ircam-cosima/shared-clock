@@ -27,21 +27,29 @@ class PlayerExperience extends Experience {
 
       switch (value) {
         case 'start':
-          this.startTime = applyAt;
-          this.broadcast('player', null, 'start', this.position, applyAt);
+          if(this.state !== 'start') {
+            this.startTime = applyAt;
+            this.broadcast('player', null, 'start', this.position, applyAt);
+            this.state = value;
+          }
           break;
         case 'pause':
-          this.position = applyAt - this.startTime;
-          this.broadcast('player', null, 'pause', this.position, applyAt);
+          if(this.state === 'start') {
+            this.position += applyAt - this.startTime;
+            this.broadcast('player', null, 'pause', this.position, applyAt);
+            this.state = value;
+          }
           break;
         case 'stop':
-          this.startTime = null;
-          this.position = 0;
-          this.broadcast('player', null, 'stop', applyAt);
+          if(this.state !== 'stop') {
+            this.startTime = null;
+            this.position = 0;
+            this.broadcast('player', null, 'stop', applyAt);
+            this.state = value;
+          }
           break;
       }
 
-      this.state = value;
     });
   }
 

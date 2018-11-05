@@ -59,7 +59,7 @@ class PlayerExperience extends soundworks.Experience {
 
     // init view
     this.view = new ClockView(this.transport, {
-      currentTime: '00:00',
+      currentTime: 'No time, yet',
       state: '',
       position: '',
     });
@@ -69,8 +69,8 @@ class PlayerExperience extends soundworks.Experience {
       const dt = applyAt - syncTime;
 
       if (dt > 0) {
-        this.playControl.seek(position);
         setTimeout(() => {
+          this.playControl.seek(position);
           this.playControl.start();
         }, dt * 1000);
       } else {
@@ -90,7 +90,7 @@ class PlayerExperience extends soundworks.Experience {
         }, dt * 1000);
       } else {
         this.playControl.pause();
-        this.playControl.seek(position - dt); // compensate late message
+        this.playControl.seek(position); // compensate late message
       }
     });
 
