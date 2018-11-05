@@ -6,39 +6,14 @@ import { centToLinear } from 'soundworks/utils/math';
 const audio = soundworks.audio;
 const audioContext = soundworks.audioContext;
 
-// class ClockEngine extends audio.TimeEngine {
-//   constructor(view, sync) {
-//     super();
-
-//     // this.view = view;
-//     // this.sync = sync;
-//     // this.startTime = null;
-
-//     this.period = 1;
-//     // this._timeoutId = null;
-//   }
-
-//   syncPosition(time, position) {
-//     return position;
-//   }
-
-//   advancePosition(time, position) {
-//     return position + this.period;
-//   }
-// }
-
-// this experience plays a sound when it starts, and plays another sound when
-// other clients join the experience
 class PlayerExperience extends soundworks.Experience {
   constructor(assetsDomain) {
     super();
 
     this.platform = this.require('platform', { features: ['web-audio'] });
     this.checkin = this.require('checkin', { showDialog: false });
-    this.sharedParams = this.require('shared-params');
-
-    // this.syncScheduler = this.require('sync-scheduler');
     this.sync = this.require('sync');
+    this.sharedParams = this.require('shared-params');
   }
 
   start() {
@@ -54,8 +29,6 @@ class PlayerExperience extends soundworks.Experience {
 
     this.transport = new masters.Transport(this.scheduler);
     this.playControl = new masters.PlayControl(this.scheduler, this.transport);
-    // this.clock = new ClockEngine(this.view, this.sync);
-    // this.transport.add(this.clock);
 
     // init view
     this.view = new ClockView(this.transport, {
@@ -74,7 +47,7 @@ class PlayerExperience extends soundworks.Experience {
           this.playControl.start();
         }, dt * 1000);
       } else {
-        this.playControl.seek(position - dt); // compensate late message
+        this.playControl.seek(position - dt);
         this.playControl.start();
       }
     });
@@ -90,7 +63,7 @@ class PlayerExperience extends soundworks.Experience {
         }, dt * 1000);
       } else {
         this.playControl.pause();
-        this.playControl.seek(position - dt); // compensate late message
+        this.playControl.seek(position - dt);
       }
     });
 
@@ -114,18 +87,8 @@ class PlayerExperience extends soundworks.Experience {
       //   this.view.setTime(this.position);
     });
 
-    this.show().then(() => {
-      // view is ready
-    });
+    this.show().then(() => {});
   }
-
-  // playSound(buffer, randomPitchVar = 0) {
-  //   const src = audioContext.createBufferSource();
-  //   src.connect(audioContext.destination);
-  //   src.buffer = buffer;
-  //   src.start(audioContext.currentTime);
-  //   src.playbackRate.value = centToLinear((Math.random() * 2 - 1) * randomPitchVar);
-  // }
 }
 
 export default PlayerExperience;
