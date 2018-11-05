@@ -2,6 +2,7 @@ import 'source-map-support/register'; // enable sourcemaps in node
 import path from 'path';
 import * as soundworks from 'soundworks/server';
 import PlayerExperience from './PlayerExperience';
+import ControllerExperience from './ControllerExperience';
 
 const configName = process.env.ENV || 'default';
 const configPath = path.join(__dirname, 'config', configName);
@@ -39,11 +40,11 @@ soundworks.server.setClientConfigDefinition((clientType, config, httpRequest) =>
 
 
 const sharedParams = soundworks.server.require('shared-params');
-sharedParams.addEnum('/start-stop', '&nbsp;', ['start', 'stop'], 'stop');
-sharedParams.addNumber('/position', 'position', -10, 60 * 60, 1, 0);
+sharedParams.addEnum('/start-stop', 'start / stop', ['start', 'pause', 'stop'], 'stop');
+sharedParams.addNumber('/position', 'position', -10, 60 * 60, 1, 0, 's');
 
 const experience = new PlayerExperience('player');
-const controller = new soundworks.ControllerExperience('controller');
+const controller = new ControllerExperience('controller');
 
 // start application
 soundworks.server.start();

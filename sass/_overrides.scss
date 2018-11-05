@@ -1,15 +1,15 @@
-#experience {
+#clock {
   #time {
-  	font-family: "Helvetica";
+  	font-family: consolas, monospace;
   }
 
   // background-color
   &.portrait #time {
-    font-size: 6rem;
+    font-size: 2rem;
   }
 
   &.landscape #time {
-    font-size: 10rem;
+    font-size: 4rem;
   }
 }
 

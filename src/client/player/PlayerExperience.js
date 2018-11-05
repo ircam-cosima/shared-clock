@@ -1,38 +1,31 @@
 import * as soundworks from 'soundworks/client';
+import * as masters from 'waves-masters';
 import ClockView from './ClockView';
 import { centToLinear } from 'soundworks/utils/math';
 
 const audio = soundworks.audio;
 const audioContext = soundworks.audioContext;
 
-class ClockEngine extends audio.TimeEngine {
-  constructor(view, sync) {
-    super();
+// class ClockEngine extends audio.TimeEngine {
+//   constructor(view, sync) {
+//     super();
 
-    this.view = view;
-    this.sync = sync;
-    this.startTime = null;
+//     // this.view = view;
+//     // this.sync = sync;
+//     // this.startTime = null;
 
-    this.period = 0.05;
-    this._timeoutId = null;
-  }
+//     this.period = 1;
+//     // this._timeoutId = null;
+//   }
 
-  clear() {
-    clearTimeout(this._timeoutId);
-  }
+//   syncPosition(time, position) {
+//     return position;
+//   }
 
-  advanceTime(syncTime) {
-    const now = this.sync.getSyncTime();
-    const currentTime = syncTime - this.startTime;
-
-    // compensate scheduler lookahead
-    this._timeoutId = setTimeout(() => {
-      this.view.setTime(currentTime);
-    }, syncTime - now);
-
-    return syncTime + this.period;
-  }
-}
+//   advancePosition(time, position) {
+//     return position + this.period;
+//   }
+// }
 
 // this experience plays a sound when it starts, and plays another sound when
 // other clients join the experience
@@ -44,50 +37,81 @@ class PlayerExperience extends soundworks.Experience {
     this.checkin = this.require('checkin', { showDialog: false });
     this.sharedParams = this.require('shared-params');
 
-    this.syncScheduler = this.require('sync-scheduler');
+    // this.syncScheduler = this.require('sync-scheduler');
     this.sync = this.require('sync');
   }
 
   start() {
     super.start(); // don't forget this
 
-    // initialize the view
-    this.view = new ClockView({
+    this.scheduler = new masters.Scheduler(() => {
+      return this.sync.getSyncTime();
+    }, {
+      currentTimeToAudioTimeFunction: (currentTime) => {
+        return this.sync.getAudioTime(currentTime);
+      },
+    });
+
+    this.transport = new masters.Transport(this.scheduler);
+    this.playControl = new masters.PlayControl(this.scheduler, this.transport);
+    // this.clock = new ClockEngine(this.view, this.sync);
+    // this.transport.add(this.clock);
+
+    // init view
+    this.view = new ClockView(this.transport, {
       currentTime: '00:00',
       state: '',
       position: '',
-    }, {}, {
-      id: this.id,
     });
 
-    this.clock = new ClockEngine(this.view, this.sync);
+    this.receive('start', (position, applyAt) => {
+      const syncTime = this.sync.getSyncTime();
+      const dt = applyAt - syncTime;
 
-    this.receive('position', position => {
-      this.position = position;
+      if (dt > 0) {
+        this.playControl.seek(position);
+        setTimeout(() => {
+          this.playControl.start();
+        }, dt * 1000);
+      } else {
+        this.playControl.seek(position - dt); // compensate late message
+        this.playControl.start();
+      }
+    });
+
+    this.receive('pause', (position, applyAt) => {
+      const syncTime = this.sync.getSyncTime();
+      const dt = applyAt - syncTime;
+
+      if (dt > 0) {
+        setTimeout(() => {
+          this.playControl.pause();
+          this.playControl.seek(position);
+        }, dt * 1000);
+      } else {
+        this.playControl.pause();
+        this.playControl.seek(position - dt); // compensate late message
+      }
+    });
+
+    this.receive('stop', (applyAt) => {
+      const syncTime = this.sync.getSyncTime();
+      const dt = applyAt - syncTime;
+
+      if (dt > 0) {
+        setTimeout(() => {
+          this.playControl.stop();
+        }, dt * 1000);
+      } else {
+        this.playControl.stop();
+      }
+    });
+
+    this.receive('seek', (position, applyAt) => {
+      // this.position = position;
       // if the clock is not running update
-      if (!this.clock.master)
-        this.view.setTime(this.position);
-    });
-
-    this.receive('start', syncStartTime => {
-      if (!this.clock.master) {
-        const startAt = Math.ceil(this.syncScheduler.syncTime);
-
-        this.clock.startTime = syncStartTime;
-        this.syncScheduler.add(this.clock, startAt);
-      }
-    });
-
-    this.receive('stop', () => {
-      if (this.clock.master) {
-        this.clock.startTime = null;
-        this.syncScheduler.remove(this.clock);
-        this.clock.clear();
-
-        // we could reset the display to the start position, but the last
-        // deferred updates overwrite it anyway, and we can stay at the last time
-        this.view.setTime(this.position);
-      }
+      // if (!this.clock.master)
+      //   this.view.setTime(this.position);
     });
 
     this.show().then(() => {
@@ -95,13 +119,13 @@ class PlayerExperience extends soundworks.Experience {
     });
   }
 
-  playSound(buffer, randomPitchVar = 0) {
-    const src = audioContext.createBufferSource();
-    src.connect(audioContext.destination);
-    src.buffer = buffer;
-    src.start(audioContext.currentTime);
-    src.playbackRate.value = centToLinear((Math.random() * 2 - 1) * randomPitchVar);
-  }
+  // playSound(buffer, randomPitchVar = 0) {
+  //   const src = audioContext.createBufferSource();
+  //   src.connect(audioContext.destination);
+  //   src.buffer = buffer;
+  //   src.start(audioContext.currentTime);
+  //   src.playbackRate.value = centToLinear((Math.random() * 2 - 1) * randomPitchVar);
+  // }
 }
 
 export default PlayerExperience;
