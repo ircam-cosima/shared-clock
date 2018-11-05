@@ -45,7 +45,7 @@ class PlayerExperience extends soundworks.Experience {
         setTimeout(() => {
           this.playControl.seek(position);
           this.playControl.start();
-        }, dt * 1000);
+        }, Math.floor(dt * 1000));
       } else {
         this.playControl.seek(position - dt);
         this.playControl.start();
@@ -60,7 +60,7 @@ class PlayerExperience extends soundworks.Experience {
         setTimeout(() => {
           this.playControl.pause();
           this.playControl.seek(position);
-        }, dt * 1000);
+        }, Math.floor(dt * 1000));
       } else {
         this.playControl.pause();
         this.playControl.seek(position); // compensate late message
@@ -74,7 +74,7 @@ class PlayerExperience extends soundworks.Experience {
       if (dt > 0) {
         setTimeout(() => {
           this.playControl.stop();
-        }, dt * 1000);
+        }, Math.floor(dt * 1000));
       } else {
         this.playControl.stop();
       }
@@ -87,7 +87,7 @@ class PlayerExperience extends soundworks.Experience {
       if (dt > 0) {
         setTimeout(() => {
           this.playControl.seek(position);
-        }, dt * 1000);
+        }, Math.floor(dt * 1000));
       } else {
         if (this.playControl.running) {
           // compensate for late receiving of the control
