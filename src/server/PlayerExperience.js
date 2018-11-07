@@ -36,7 +36,8 @@ class PlayerExperience extends Experience {
           }
           break;
         case 'stop':
-          if (this.state !== 'stop') {
+          // allow for multiple stop events, to reset position
+          {
             this.cueTime = null;
             this.position = 0;
             this.broadcast('player', null, 'stop', applyAt);
